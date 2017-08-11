@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yc.ssm.mapper.UsersMapper">
+
+	<insert id="insertUsers" parameterType="Login">
+		insert into
+		users(ulid,nickname) values
+		(#{lid},#{lid})
+	</insert>
+
+	<resultMap type="Users" id="UsersMap">
+		<id column="uid" property="uid" />
+		<result column="nickname" property="nickname" />
+		<result column="age" property="age" />
+		<result column="birthday" property="birthday" />
+		<result column="photo" property="photo" />
+		<result column="star" property="star" />
+		<result column="hobby" property="hobby" />
+		<result column="job" property="job" />
+		<result column="company" property="company" />
+		<result column="school" property="school" />
+		<result column="address" property="address" />
+		<result column="hometown" property="hometown" />
+		<result column="picture" property="picture" />
+		<result column="astate" property="astate" />
+		<association property="login" column="ulid" javaType="login">
+			<id column="ulid" property="lid" />
+			<result column="gender" property="gender" />
+			<result column="email" property="email" />
+			<result column="regdate" property="regdate" />
+		</association>
+	</resultMap>
+	<select id="findUsersInfo" parameterType="string" resultMap="UsersMap"
+		useCache="false" flushCache="true">
+		select u.*,l.gender from users u,logining
+		l where u.ulid=l.lid and
+		u.ulid=#{lid}
+	</select>
+
+	<update id="updateUserInfo" parameterType="Users">
+		update users
+		<trim prefix="set" suffixOverrides="," prefixOverrides=",">
+			<if test="nickname!=null and nickname!=''">
+				nickname=#{nickname},
+			</if>
+			<if test="age!=null and age!=''">
+				age=#{age},
+			</if>
+			<if test="birthday!=null and birthday!=''">
+				birthday=#{birthday},
+			</if>
+			<if test="picture!=null and picture!=''">
+				picture=#{picture},
+			</if>
+			<if test="star!=null and star!=''">
+				star=#{star},
+			</if>
+			<if test="hobby!=null and hobby!=''">
+				hobby=#{hobby},
+			</if>
+			<if test="job!=null and job!=''">
+				job=#{job},
+			</if>
+			<if test="company!=null and company!=''">
+				company=#{company},
+			</if>
+			<if test="school!=null and school!=''">
+				school=#{school},
+			</if>
+			<if test="address!=null and address!=''">
+				address=#{address},
+			</if>
+			<if test="hometown!=null and hometown!=''">
+				hometown=#{hometown},
+			</if>
+			<if test="astate!=null and astate!=''">
+				astate=#{astate}
+			</if>
+		</trim>
+		<where>
+			<if test="uid!=null and uid!=''"></if>
+			uid=#{uid}
+		</where>
+	</update>
+
+	<select id="findUsersInfoByAid" parameterType="string"
+		resultMap="UsersMap">
+		select * from users u ,logining l where u.uid=#{uid} and
+		u.ulid = l.lid
+	</select>
+
+	<!-- 分页查询 -->
+	<resultMap type="PaginationBean" id="PaginationBeanMap">
+		<id column="total" property="total"></id><!-- id表示主键 主键相同 结果相同 -->
+		<id column="totalPage" property="totalPage"></id>
+		<collection property="rows" ofType="Users">
+			<id column="uid" property="uid" />
+			<result column="nickname" property="nickname" />
+			<result column="age" property="age" />
+			<result column="birthday" property="birthday" />
+			<result column="star" property="star" />
+			<result column="hobby" property="hobby" />
+			<result column="job" property="job" />
+			<result column="picture" property="picture" />
+			<association property="Login" column="ulid" javaType="Login">
+				<id column="ulid" property="lid" />
+				<result column="gender" property="gender" />
+				<result column="email" property="email" />
+				<result column="regdate" property="regdate" />
+			</association>
+		</collection>
+	</resultMap>
+	<select id="partUsers" parameterType="PaginationBean" resultMap="PaginationBeanMap">
+		select ${currPage} currPage,${pageSize} pageSize,
+		(select count(1) from
+		users u,logining
+		l where u.ulid=l.lid)total,
+		(select ceil(count(1) /
+		${pageSize}) from users u,logining
+		l where u.ulid=l.lid)totalPage,t.*
+		from ( select n.*,rownum rn from
+		(select u.*,l.* from users u,logining
+		l where u.ulid=l.lid) n where ${currPage} *${pageSize}>=rownum) t
+		where
+		rn>(${currPage}-1) * ${pageSize}
+	</select>
+
+	<select id="listUserByAid" parameterType="string" resultMap="UsersMap">
+		select * from users u ,logining l where u.aid like '%'||#{uid}||'%'
+		and u.ulid = l.lid
+	</select>
+
+</mapper>

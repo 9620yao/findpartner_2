@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yc.ssm.mapper.HomepageMapper">
+	<insert id="addhomepage" parameterType="com.yc.ssm.entity.Homepage">
+		insert into
+		homepage(hpid,hpuseid,hpdate)
+		values(#{hpid},#{hpuseid},#{hpdate})
+	</insert>
+
+	<resultMap type="PaginationBean" id="PaginationBeanMap">
+		<result property="currPage" column="currPage" />
+		<result property="pageSize" column="pageSize" />
+		<collection property="rows" column="{min=min,max=max,hpuseid=hpuseid}"
+			ofType="com.yc.ssm.entity.Homepage" select="GetPartTea" />
+	</resultMap>
+
+	<select id="pblist" parameterType="java.util.Map" resultMap="PaginationBeanMap"
+		useCache="false" flushCache="true">
+		select
+		count(1) total,ceil(count(1) /
+		${pBean.pageSize})
+		totalPage,${pBean.currPage}
+		currPage,${pBean.pageSize}
+		pageSize,#{hpuseid}
+		hpuseid,${pBean.currPage} *
+		${pBean.pageSize} max,(${pBean.currPage}-1)
+		* ${pBean.pageSize} min
+		from
+		homepage
+		where
+		hpuseid=#{hpuseid}
+	</select>
+
+	<select id="GetPartTea" resultType="com.yc.ssm.entity.Homepage">
+		select * from homepage where
+		hpuseid=#{hpuseid}
+		order by hpdate desc limit #{min},#{max}
+	</select>
+
+	<resultMap type="PaginationBean" id="selfPaginationBeanMap">
+		<result property="currPage" column="currPage" />
+		<result property="pageSize" column="pageSize" />
+		<collection property="rows" column="{max=max,min=min,hpuseid=hpuseid}"
+			ofType="com.yc.ssm.entity.Homepage" select="selfGetPartTea" />
+	</resultMap>
+
+	<select id="selflist" parameterType="java.util.Map" resultMap="selfPaginationBeanMap"
+		useCache="false" flushCache="true">
+		select
+		count(1) total,ceil(count(1) /
+		${pBean.pageSize})
+		totalPage,${pBean.currPage}
+		currPage,${pBean.pageSize}
+		pageSize,#{hpuseid}
+		hpuseid,${pBean.currPage} *
+		${pBean.pageSize} max,(${pBean.currPage}-1)
+		* ${pBean.pageSize} min
+		from
+		homepage
+		where
+		hpuseid in (
+		select distinct
+		(uid)
+		from friends
+		where uid in
+		(select
+		fid from friends where uid =
+		#{hpuseid})
+		and fid = #{hpuseid}
+		or uid =
+		#{hpuseid}
+		)
+	</select>
+
+	<select id="selfGetPartTea" resultType="com.yc.ssm.entity.Homepage">
+		select * from homepage
+		where
+		hpuseid in (
+		select
+		distinct (uid)
+		from friends
+		where uid in
+		(select
+		fid from friends where
+		uid = #{hpuseid})
+		and fid = #{hpuseid}
+		) or
+		hpuseid = #{hpuseid}
+		order by
+		hpdate desc limit #{min},#{max}
+	</select>
+
+</mapper>

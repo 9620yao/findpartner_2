@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yc.ssm.mapper.WordsMapper">
+	<resultMap type="PaginationBean" id="PaginationBeanMap">
+		<result property="currPage" column="currPage" />
+		<result property="pageSize" column="pageSize" />
+		<collection property="rows" column="{min=min,max=max,waid=waid}"
+			ofType="com.yc.ssm.entity.Words" select="GetPartTea" />
+	</resultMap>
+
+	<select id="PbeanWords" parameterType="java.util.Map" resultMap="PaginationBeanMap"
+		useCache="false" flushCache="true">
+		select
+		count(1) total,ceil(count(1) /
+		${pBean.pageSize})
+		totalPage,${pBean.currPage}
+		currPage,${pBean.pageSize}
+		pageSize,#{waid}
+		waid,${pBean.currPage}*${pBean.pageSize}
+		max,(${pBean.currPage}-1)*${pBean.pageSize} min
+		from
+		words
+		<where>
+			<if test="waid!=null and waid!=''">
+				waid=#{waid}
+			</if>
+		</where>
+	</select>
+
+	<select id="GetPartTea" resultType="com.yc.ssm.entity.Words">
+		select * from words
+		<where>
+			<if test="waid!=null and waid!=''">
+				waid=#{waid}
+			</if>
+		</where>
+		order by wdate desc limit #{min},#{max}
+	</select>
+
+	<insert id="addWords" parameterType="Words">
+		insert into
+		Words(waid,wfrendid,wcontent,wdate)
+		values(#{waid},#{wfrendid},#{wcontent},now())
+	</insert>
+
+	<select id="findByName" parameterType="Words" resultType="Words">
+		select
+		* from words where wfrendid like '%'||#{wfrendid}||'%' or wdate like
+		'%'||#{wfrendid}||'%'
+	</select>
+
+	<select id="countWords" parameterType="string" resultMap="listmap">
+		select distinct waid,count(1) counts from words
+		<where>
+			<if test="_parameter!=null and _parameter!=''">
+				waid = #{_parameter}
+			</if>
+		</where>
+		group by waid
+	</select>
+	<resultMap type="java.util.Map" id="listmap">
+		<result column="counts" property="counts" />
+		<result column="waid" property="waid" />
+	</resultMap>
+</mapper>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yc.ssm.mapper.AlbumMapper">
+
+	<select id="listAlbum" parameterType="string" resultType="com.yc.ssm.entity.Album">
+		select
+		* from album where auid = #{_parameter}
+	</select>
+
+	<select id="fpByabid" parameterType="string" resultType="com.yc.ssm.entity.Album">
+		select *
+		from album where abid = #{_parameter}
+	</select>
+
+	<insert id="addAlbum" parameterType="com.yc.ssm.entity.Album">
+		insert into
+		album(abname,auid,alcontent,aldate)
+		values(#{abname},#{auid},#{alcontent},now())
+	</insert>
+
+	<update id="updateAheader" parameterType="java.util.Map">
+		update
+		album set aheader
+		= #{picPath} where abid = #{abid}
+	</update>
+
+	<update id="updateAldate" parameterType="java.util.Map">
+		update
+		album set aldate =
+		#{aldate} where abid = #{abid}
+	</update>
+
+	<resultMap type="PaginationBean" id="PBMap">
+		<collection property="rows" column="{min=min,max=max}"
+			ofType="com.yc.ssm.entity.Album" select="GetAllAlbums" />
+	</resultMap>
+	<select id="showAlbum" parameterType="PaginationBean" resultMap="PBMap"
+		useCache="false" flushCache="true">
+		select count(1) total,
+		ceil(count(1)/${pageSize}) totalPage
+		,${pageSize} pageSize ,${currPage}
+		currPage,${currPage} *
+		${pageSize} max,(${currPage}-1)
+		* ${pageSize} min
+		from album
+	</select>
+	<select id="GetAllAlbums" resultType="com.yc.ssm.entity.Album">
+		select * from album
+		limit
+		order by aldate desc
+		#{min},#{max}
+	</select>
+
+
+	<select id="findByName" parameterType="Album" resultType="Album">
+		select
+		* from album where auid like '%'||#{auid}||'%' or aldate like
+		'%'||#{auid}||'%'
+	</select>
+
+	<select id="countAlbum" parameterType="string" resultMap="listmap">
+		select distinct auid,count(1) counts from album
+		<where>
+			<if test="_parameter!=null">
+				auid like '%'||#{_parameter}||'%'
+			</if>
+		</where>
+		group by auid
+	</select>
+	<resultMap type="java.util.Map" id="listmap">
+		<result column="counts" property="counts" />
+		<result column="auid" property="auid" />
+	</resultMap>
+</mapper>
